@@ -12,11 +12,27 @@
 <script>
     // const videoElement = document.createElement('video');
     async function  app(){
+        if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+            console.log("Let's get this party started")
+        }
+        await navigator.mediaDevices.getUserMedia({video: true});
+
         const webcamElement = document.getElementById('webcam');
+        const constraints = {
+            advanced: [{
+                facingMode: "environment"
+            }]
+        };
+        await navigator.mediaDevices.getUserMedia({webcamElement: constraints}).then((stream) => {
+                webcamElement.src = window.URL.createObjectURL(stream);
+                webcamElement.play();
+            });
 
         // Create an object from Tensorflow.js data API which could capture image
         // from the web camera as Tensor.
         const webcam = await tf.data.webcam(webcamElement);
+
+
         const modelUrl = 'https://cdn.jsdelivr.net/gh/tangmingsh/rccar_tfjs_model/model.json'
         const model = await tf.loadLayersModel(modelUrl);
         const label = ['直行','停止','左转','右转'];
