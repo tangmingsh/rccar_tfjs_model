@@ -5,7 +5,7 @@
     <title>TFJS AI RCCar</title>
 </head>
 <body>
-<video autoplay playsinline muted id="webcam" width="224" height="224"></video>
+<video autoplay playsinline muted id="webcam" width="300" height="300"></video>
 <div id="predictText"></div>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.4.0"> </script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
@@ -34,7 +34,7 @@
         // from the web camera as Tensor.
         const modelUrl = 'https://cdn.jsdelivr.net/gh/tangmingsh/rccar_tfjs_model/model.json'
         const model = await tf.loadLayersModel(modelUrl);
-        const label = ['直行','停止','左转','右转'];
+        const label = ['直行','左转','右转','停止'];
         model.summary();
 
         while (true) {
