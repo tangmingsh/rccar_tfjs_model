@@ -8,7 +8,7 @@
 <body>
 <video autoplay playsinline muted id="webcam" width="224" height="224"></video>
 <div id="predictText"></div>
-<input id="publishTopic" type="text" value="/tm/led">
+<input id="publishTopic" type="text" value="car/dir">
 <div id="mqtt_info"></div>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.4.0"> </script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
@@ -44,7 +44,7 @@
         console.log('客户端未连接');
     }
 
-    client.publish('/tm/led', 'hello AI', (error) => {
+    client.publish('car/dir', '3', (error) => {
         console.log(error || '消息发布成功')
     })
     let pubTopic = document.getElementById('publishTopic');
@@ -64,7 +64,7 @@
 
         const modelUrl = 'https://cdn.jsdelivr.net/gh/tangmingsh/rccar_tfjs_model/model.json'
         const model = await tf.loadLayersModel(modelUrl);
-        const label = ['go','right','left','stop'];
+        const label = ['go','left','right','stop'];
         // model.summary();
 
         while (true) {
