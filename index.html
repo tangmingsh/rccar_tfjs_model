@@ -2,40 +2,70 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TFJS AI RCCar</title>
+    <title>AI RCCar WIFI</title>
+    <script src="./mqtt.min.js"></script>
 </head>
 <body>
-<video autoplay playsinline muted id="webcam" width="300" height="300"></video>
+<video autoplay playsinline muted id="webcam" width="224" height="224"></video>
 <div id="predictText"></div>
+<input id="publishTopic" type="text" value="/tm/led">
+<div id="mqtt_info"></div>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.4.0"> </script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+
+<script>
+    // 将在全局初始化一个 mqtt 变量
+    console.log(mqtt)
+    // 连接选项
+    const options = {
+        connectTimeout: 40000, // 超时时间
+        // 认证信息
+        clientId: 'emqx-connect-via-websocket'+ Math.random().toString(16).substr(2, 8),
+        username: '',
+        password: '',
+    }
+
+    const client = mqtt.connect('wss://www.sjaiedu.com/mqtt', options)
+    client.on('connect',(e)=>{
+        // console.log('连接成功!');
+        document.getElementById('mqtt_info').innerHTML = 'MQTT连接成功！';
+    })
+    //
+    // client.on('reconnect', (error) => {
+    //     console.log('正在重连:', error)
+    // })
+
+    client.on('error', (error) => {
+        console.log('连接失败:', error);
+        document.getElementById('mqtt_info').innerHTML = 'MQTT连接成功！';
+    })
+    // 发布消息
+    if (!client.connected) {
+        console.log('客户端未连接');
+    }
+
+    client.publish('/tm/led', 'hello AI', (error) => {
+        console.log(error || '消息发布成功')
+    })
+    let pubTopic = document.getElementById('publishTopic');
+</script>
 <!--<script src="tfjs2.4.js"></script>-->
 <script>
     // const videoElement = document.createElement('video');
     async function  app(){
         // 获取camera标签
         const video = document.getElementById('webcam');
-        // 设置后置相机
-        // navigator.getMedia = navigator.getUserMedia;
-        // // await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { exact: "environment" } } })
-        // await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user'} })
-        //     .then(stream => {
-        //         video.srcObject = stream
-        //         video.onloadedmetadata = () => {
-        //             video.play()
-        //         }
-        //     })
         const camconfig = {
             facingMode:'environment'
         }
-
-        const webcam = await tf.data.webcam(video,camconfig);
         // Create an object from Tensorflow.js data API which could capture image
         // from the web camera as Tensor.
+        const webcam = await tf.data.webcam(video,camconfig);
+
         const modelUrl = 'https://cdn.jsdelivr.net/gh/tangmingsh/rccar_tfjs_model/model.json'
         const model = await tf.loadLayersModel(modelUrl);
-        const label = ['直行','左转','右转','停止'];
-        model.summary();
+        const label = ['go','right','left','stop'];
+        // model.summary();
 
         while (true) {
             const img = await webcam.capture();
@@ -51,17 +81,19 @@
             const normalized = tf.scalar(1.0).sub(resized_image.div(offset));
             const batchedImage = normalized.expandDims(0);
             const result = await model.predict(batchedImage).data();
-            console.log(result);
+            // console.log(result);
             let text = label.map((label, index) => ({ label, score: result[index] })).sort((a,b)=>b.score - a.score)
-            console.log(label.map((label, index) => ({ label, score: result[index] })).sort((a,b)=>b.score - a.score))
+            // console.log(label.map((label, index) => ({ label, score: result[index] })).sort((a,b)=>b.score - a.score))
+            console.log(text[0].label)
             text.forEach((e)=>{
-                tpl +=`<p>${e.label},评分${e.score}</p>`
-
+                tpl +=`<p>${e.label},${e.score}</p>`
             })
             predictText.innerHTML = tpl;
             // await predict(image);
+            client.publish(pubTopic.value, text[0].label, (error) => {
+                // console.log(error || '消息发布成功')
+            })
             img.dispose();
-
             // Give some breathing room by waiting for the next animation frame to
             // fire.
             await tf.nextFrame();
