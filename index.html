@@ -5,13 +5,14 @@
     <title>AI RCCar WIFI</title>
     <script src="./mqtt.min.js"></script>
 </head>
+<title>CNN RC Car</title>
 <body>
 <video autoplay playsinline muted id="webcam" width="224" height="224"></video>
 <div id="predictText"></div>
 <input id="publishTopic" type="text" value="car/dir">
 <div id="mqtt_info"></div>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.4.0"> </script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"> </script>
+<!--<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>-->
 
 <script>
     // 将在全局初始化一个 mqtt 变量
@@ -44,7 +45,7 @@
         console.log('客户端未连接');
     }
 
-    client.publish('car/dir', '3', (error) => {
+    client.publish('car/dir', '1', (error) => {
         console.log(error || '消息发布成功')
     })
     let pubTopic = document.getElementById('publishTopic');
@@ -62,9 +63,9 @@
         // from the web camera as Tensor.
         const webcam = await tf.data.webcam(video,camconfig);
 
-        const modelUrl = 'https://cdn.jsdelivr.net/gh/tangmingsh/rccar_tfjs_model/model.json'
+        const modelUrl = './model.json'
         const model = await tf.loadLayersModel(modelUrl);
-        const label = ['go','left','right','stop'];
+        const label = ['go','left','right'];
         // model.summary();
 
         while (true) {
@@ -77,6 +78,7 @@
             let tpl = ''
 
             const resized_image = tf.image.resizeBilinear(image, [224,224]).toFloat();
+            // const offset = tf.scalar(255.0);
             const offset = tf.scalar(255.0);
             const normalized = tf.scalar(1.0).sub(resized_image.div(offset));
             const batchedImage = normalized.expandDims(0);
